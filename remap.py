@@ -4,6 +4,7 @@
 #Creates copy of map db, leaving only specified(filtered) blocks.
 #Can also be used for map backup, may-be even online backup.
 
+import sys #to get parameters
 import sqlite3
 import mt_block_parser
 
@@ -22,9 +23,12 @@ def unsignedToSigned(i, max_positive):
     else:
         return i - 2*max_positive
 
-
-source = r'<Put your path to world folder here>/map.sqlite'
-target = r'<Put your path to world folder here>/map.sqlite.backup'
+source = r'<Put your path to world folder here>/map.sqlite.backup'
+target = r'<Put your path to world folder here>/map.sqlite.clear'
+arguments = sys.argv
+if(len(arguments) == 3 ):
+    source = str(arguments[1])
+    target = str(arguments[2])
 
 #use compiled regular expression to filter blocks by block content. it is faster that checking "in array".
 useful_block_evidence = re.compile(

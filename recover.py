@@ -3,6 +3,7 @@
 
 #Copy all blocks except corrupted ones
 
+import sys #to get parameters
 import sqlite3
 import mt_block_parser
 
@@ -22,8 +23,12 @@ def unsignedToSigned(i, max_positive):
     else:
         return i - 2*max_positive
 
-source = r'./worlds/map.20141102.backup'
-target = r'newmap.sqlite.rcovered'
+source = r'<Put your path to world folder here>/map.sqlite.backup'
+target = r'<Put your path to world folder here>/map.sqlite.clear'
+arguments = sys.argv
+if(len(arguments) == 3 ):
+    source = str(arguments[1])
+    target = str(arguments[2])
 
 sourceconn = sqlite3.connect(source)
 targetconn = sqlite3.connect(target)

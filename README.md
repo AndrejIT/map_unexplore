@@ -16,4 +16,6 @@ mt_block_parser.py - Can be used to read map block data from your code.
 
 recover.py - Copy only helthy map blocks.
 
-mirrormap.py - Creates mirrored version of map. Currently only script, which can take arguments <source.sqlite> <target.sqlite>.
+mirrormap.py - Creates mirrored version of map.
+
+Now can be used like "script.py <source.sqlite> <target.sqlite>" (or "<pythonpath>\python.exe script.py <source.sqlite> <target.sqlite>" on Windows)

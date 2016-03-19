@@ -5,7 +5,7 @@
 #http://www.tutorialspoint.com/sqlite/sqlite_bitwise_operators.htm
 #http://stackoverflow.com/questions/1294619/does-sqlite-support-any-kind-of-ifcondition-statement-in-a-select
 
-
+import sys #to get parameters
 import sqlite3
 import mt_block_parser
 
@@ -27,14 +27,17 @@ from PIL import Image, ImageDraw, ImageFont, ImageColor
 
 source = r'<Put your path to world folder here>/map.sqlite'
 target_image = r'<Put your path to world folder here>/map.png'
+arguments = sys.argv
+if(len(arguments) == 3 ):
+    source = str(arguments[1])
+    target_image = str(arguments[2])
 
 #use compiled regular expression to filter blocks by block content. it is faster that checking "in array".
 useful_block_evidence = re.compile(
-"default:cobble|"+
+#"default:cobble|"+"bones:bones|"+
 "protector:protect|default:chest_locked|doors:door_steel|"+
 "default:chest|default:torch|default:stonebrick|default:glass|default:obsidian_glass|"+
-"default:ladder|default:rail|default:fence_wood|"+
-"bones:bones"
+"default:ladder|default:rail|default:fence_wood"
 )
 
 sourceconn = sqlite3.connect(source)
@@ -58,6 +61,7 @@ for rowMinMax in sourcecursorXZ.execute(" SELECT "+
     maxZ = rowMinMax[3]
     width = maxZ - minZ
     height = maxX - minX
+    
 
 image = Image.new("RGB", (width, height), (0,0,0,0))
 draw = ImageDraw.Draw(image)
@@ -81,10 +85,15 @@ for row in sourcecursor.execute(" SELECT "+
                                 " WHERE Y>-5 AND Y<5; "):
     try:
         block = mt_block_parser.MtBlockParser(row[4])
-        if useful_block_evidence.search(block.nameIdMappingsRead)!=None:
-            impixel[ row[0] - minX, height - row[2] + minZ ] = (255, 255, 200)
     except:
         print "Block parse error:", row[0], row[1], row[2]
+    else:
+        if useful_block_evidence.search(block.nameIdMappingsRead)!=None:
+            if row[0] - minX < 0 or height - row[2] + minZ < 0:
+                print "Do not fit to image:", row[0], row[1], row[2]
+            else:
+                impixel[ row[0] - minX, height - row[2] + minZ ] = (255, 255, 200)
+    
 
 sourceconn.close()
 
