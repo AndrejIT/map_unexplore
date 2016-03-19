@@ -18,4 +18,4 @@ recover.py - Copy only helthy map blocks.
 
 mirrormap.py - Creates mirrored version of map.
 
-Now can be used like "script.py <source.sqlite> <target.sqlite>" (or "<pythonpath>\python.exe script.py <source.sqlite> <target.sqlite>" on Windows)
+Now can pass paths to database files. Use like "./script.py &lt;source.sqlite&gt; &lt;target.sqlite&gt;" (or "&lt;pythonpath&gt;\python.exe script.py &lt;source.sqlite&gt; &lt;target.sqlite&gt;" on Windows)
