@@ -18,4 +18,6 @@ recover.py - Copy only helthy map blocks.
 
 mirrormap.py - Creates mirrored version of map.
 
+countowners.py - Get a list with players, who own protected chests and number of chests.
+
 Now can pass paths to database files. Use like "./script.py &lt;source.sqlite&gt; &lt;target.sqlite&gt;" (or "&lt;pythonpath&gt;\python.exe script.py &lt;source.sqlite&gt; &lt;target.sqlite&gt;" on Windows)
