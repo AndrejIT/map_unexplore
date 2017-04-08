@@ -12,41 +12,41 @@ import re
 class MtBlockParser:
     'Allows to read different data from Minetest map v.25 block'
     length = None
-    
+
     version = 25
     flags = None
     content_width = 2
     params_width = 2
-    
+
     nodeDataRead = ''
     arrayParam0 = None
     arrayParam1 = None
     arrayParam2 = None
-    
+
     nodeMetadataRead = ''
     metadata_version = 1
     metadata_count = None
     arrayMetadataRead = None
     arrayMetadataReadInventory = None
-    
+
     static_object_version = 0
     static_object_count = None
     objectsRead = ''
     #TODO
-    
+
     timestamp = None
-    
+
     name_id_mapping_version = 0
     num_name_id_mappings = None
     nameIdMappingsRead = ''
     nameIdMappings = None
-    
+
     length_of_timer = 10
     num_of_timers = None
     timersRead = ''
     arrayTimerTimeout = None
     arrayTimerElapsed = None
-    
+
     def __init__(self, blockBlob):
         self.arrayParam0 = {}
         self.arrayParam1 = {}
@@ -56,21 +56,26 @@ class MtBlockParser:
         self.nameIdMappings = {}
         self.arrayTimerTimeout = {}
         self.arrayTimerElapsed = {}
-        
+
         if blockBlob:
             self.length = len(blockBlob)
-            
+
             cursor = 0
             if self.version > struct.unpack('B', blockBlob[cursor:cursor + 1])[0]:
                 print("Version not supported!")
             cursor+= 1
             self.flags = struct.unpack('B', blockBlob[cursor:cursor + 1])[0]
             cursor+= 1
+            #Skipping two FF bits from 27. version map format. No idea about their purpose.
+            if struct.unpack('B', blockBlob[cursor:cursor + 1])[0] != 2:
+                cursor+= 1
+            if struct.unpack('B', blockBlob[cursor:cursor + 1])[0] != 2:
+                cursor+= 1
             if self.content_width != struct.unpack('B', blockBlob[cursor:cursor + 1])[0]:
-                print("Content width not supported!")
+                print("Content width not supported!", struct.unpack('B', blockBlob[cursor:cursor + 1])[0])
             cursor+= 1
             if self.params_width != struct.unpack('B', blockBlob[cursor:cursor + 1])[0]:
-                print("Params width not supported!")
+                print("Params width not supported!", struct.unpack('B', blockBlob[cursor:cursor + 1])[0])
             cursor+= 1
             decompressor = zlib.decompressobj()
             self.nodeDataRead = decompressor.decompress( blockBlob[cursor:] )
@@ -134,8 +139,8 @@ class MtBlockParser:
             self.nameIdMappingsRead = struct.pack('>H', 0)
             self.num_of_timers = 0
             self.timersRead = struct.pack('>H', 0)
-            
-        
+
+
     def selfCompile(self):
         blockBlob = ''
         blockBlob+= struct.pack('B', self.version)
@@ -152,7 +157,7 @@ class MtBlockParser:
         blockBlob+= struct.pack('B', self.length_of_timer)
         blockBlob+= self.timersRead
         return blockBlob
-    
+
     def nodeDataParse(self):
         if self.nodeDataRead == None or self.nodeDataRead == '':
             print("No node data!")
@@ -169,7 +174,7 @@ class MtBlockParser:
         for i in range(0, 4096):
             self.arrayParam2[i] = struct.unpack('B', self.nodeDataRead[cursor:cursor + 1])[0]
             cursor+= 1
-            
+
     def nodeDataCompile(self):
         self.nodeDataRead = ''
         self.nodeDataRead+= struct.pack('>%sH' % 4096, *self.arrayParam0.values())
@@ -247,7 +252,7 @@ class MtBlockParser:
             cursor+= size
         if length != cursor:
             print("Mapping data length is wrong!")
-            
+
     def nameIdMappingsCompile(self):
         self.num_name_id_mappings = len(self.nameIdMappings)
         self.nameIdMappingsRead = ''
@@ -271,7 +276,7 @@ class MtBlockParser:
             cursor+= 4
         if length != cursor:
             print("Timer data length wrong!")
-            
+
     def timersCompile(self):
         self.num_of_timers = len(self.arrayTimerTimeout)
         self.timersRead = ''
@@ -280,4 +285,3 @@ class MtBlockParser:
             self.timersRead+= struct.pack('>H', position)
             self.timersRead+= struct.pack('>i', timeout)
             self.timersRead+= struct.pack('>i', self.arrayTimerElapsed[position])
-            
