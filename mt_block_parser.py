@@ -62,14 +62,19 @@ class MtBlockParser:
 
             cursor = 0
             if self.version > struct.unpack('B', blockBlob[cursor:cursor + 1])[0]:
-                print("Version not supported!")
-            cursor+= 1
-            self.flags = struct.unpack('B', blockBlob[cursor:cursor + 1])[0]
-            cursor+= 1
-            #Skipping two FF bits from 27. version map format. No idea about their purpose.
-            if struct.unpack('B', blockBlob[cursor:cursor + 1])[0] != 2:
+                print("Old version not supported!")
+            if 27 <= struct.unpack('B', blockBlob[cursor:cursor + 1])[0]:
+                #print("Warning for new version!")
                 cursor+= 1
-            if struct.unpack('B', blockBlob[cursor:cursor + 1])[0] != 2:
+                self.flags = struct.unpack('B', blockBlob[cursor:cursor + 1])[0]
+                cursor+= 1
+                #Skipping two bytes from 27. version map format. Their purpose is for lightning recalculation
+                #I will just ignore them for now and save map back to the older format
+                cursor+= 1
+                cursor+= 1
+            else:
+                cursor+= 1
+                self.flags = struct.unpack('B', blockBlob[cursor:cursor + 1])[0]
                 cursor+= 1
             if self.content_width != struct.unpack('B', blockBlob[cursor:cursor + 1])[0]:
                 print("Content width not supported!", struct.unpack('B', blockBlob[cursor:cursor + 1])[0])
