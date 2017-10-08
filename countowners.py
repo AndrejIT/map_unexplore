@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #Licence LGPL v2.1
 
-#list owners of protection blocks
+#list owners of protection blocks and locked chests
 
 import sys #to get parameters
 import sqlite3
@@ -21,42 +21,49 @@ if(len(arguments) > 2 ):
 print source
 
 sourceconn = sqlite3.connect(source)
-sourcecursor0 = sourceconn.cursor()
 sourcecursor = sourceconn.cursor()
 
 #ownprot = {}
 ownchest = {}
+ownsomething = {}
 
 #owned_block_evidence = re.compile("protector:protect")
-owned_block_evidence = re.compile("default:chest_locked")
+#owned_block_evidence = re.compile("default:chest_locked")
+owned_block_evidence = re.compile("protector:protect|protector_mese:protect|default:chest_locked")
 
 
-for row in sourcecursor0.execute("SELECT `pos` FROM `blocks`"):
-    for datarow in sourcecursor.execute("SELECT `data` FROM `blocks` WHERE `pos` == ? LIMIT 1;", (row[0],)):
-        temp = mt_block_parser.MtBlockParser(datarow[0])
-        if owned_block_evidence.search(temp.nameIdMappingsRead)!=None:
-            temp.nodeDataParse()
-            temp.nodeMetadataParse()
-            temp.nameIdMappingsParse()
-            for i in range(0, 4096):
-                tempName = temp.nameIdMappings[temp.arrayParam0[i]]
+
+for datarow in sourcecursor.execute("SELECT `data` FROM `blocks`"):
+    temp = mt_block_parser.MtBlockParser(datarow[0])
+    if owned_block_evidence.search(temp.nameIdMappingsRead)!=None:
+        temp.nodeDataParse()
+        temp.nodeMetadataParse()
+        temp.nameIdMappingsParse()
+        for i in range(0, 4096):
+            tempName = temp.nameIdMappings[temp.arrayParam0[i]]
 #                if tempName == 'protector:protect':
 #                    if temp.arrayMetadataRead[i]['owner'] in ownprot:
 #                        ownprot[temp.arrayMetadataRead[i]['owner']]+= 1
 #                    else:
 #                        ownprot[temp.arrayMetadataRead[i]['owner']] = 1
-                if tempName == 'default:chest_locked':
-                    if temp.arrayMetadataRead[i]['owner'] in ownchest:
-                        ownchest[temp.arrayMetadataRead[i]['owner']]+= 1
-                    else:
-                        ownchest[temp.arrayMetadataRead[i]['owner']] = 1
+#                if tempName == 'default:chest_locked':
+#                    if temp.arrayMetadataRead[i]['owner'] in ownchest:
+#                        ownchest[temp.arrayMetadataRead[i]['owner']]+= 1
+#                    else:
+#                        ownchest[temp.arrayMetadataRead[i]['owner']] = 1
+            if tempName == 'protector:protect' or tempName == 'protector_mese:protect' or tempName == 'default:chest_locked':
+                if temp.arrayMetadataRead[i]['owner'] in ownsomething:
+                    ownsomething[temp.arrayMetadataRead[i]['owner']]+= 1
+                else:
+                    ownsomething[temp.arrayMetadataRead[i]['owner']] = 1
                     
 #s_ownprot = sorted(ownprot.items(), key=operator.itemgetter(1))
-s_ownchest = sorted(ownchest.items(), key=operator.itemgetter(1))
+#s_ownchest = sorted(ownchest.items(), key=operator.itemgetter(1))
+s_ownsomething = sorted(ownsomething.items(), key=operator.itemgetter(1))
 
 with open(target, "w") as text_file:
-    for n in s_ownchest:
-        text_file.write(str(n[0]) + ' ' + str(n[1]) + "\n")
+    for n in s_ownsomething:
+        text_file.write(str(n[0]) + "\n")
         print n
 
 #datafile = file('auth.txt')
