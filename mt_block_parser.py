@@ -196,7 +196,7 @@ class MtBlockParser:
             return
         cursor = 0
         if self.metadata_version != struct.unpack('B', self.nodeMetadataRead[cursor:cursor + 1])[0]:
-            print("Unsuported metadata version!")
+            print("Unsuported metadata version! Trying anyway!")
         cursor+= 1
         self.metadata_count = struct.unpack('>H', self.nodeMetadataRead[cursor:cursor + 2])[0]
         cursor+= 2
@@ -208,7 +208,13 @@ class MtBlockParser:
             self.arrayMetadataRead[position] = {}
             for j in range(0, num_vars):
                 key_len = struct.unpack('>H', self.nodeMetadataRead[cursor:cursor + 2])[0]
-                cursor+= 2
+                if key_len == 0:
+                    cursor+= 1  # some bad guy added 1 empty bit without mentioning it in map specification???
+                    print("Extra empty bit in metadata! skipping!")
+                    key_len = struct.unpack('>H', self.nodeMetadataRead[cursor:cursor + 2])[0]
+                    cursor+= 2  # well, no point to make any better workaround until specification is corrected
+                else:
+                    cursor+= 2
                 key = self.nodeMetadataRead[cursor:cursor + key_len]
                 cursor+= key_len
                 val_len = struct.unpack('>i', self.nodeMetadataRead[cursor:cursor + 4])[0]
