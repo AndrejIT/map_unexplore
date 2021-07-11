@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 #Licence LGPL v2.1
-#Created for version 25
+#Created for version 25. Updated to support version 28.
 #https://github.com/minetest/minetest/blob/944ffe9e532a3b2be686ef28c33313148760b1c9/doc/mapformat.txt
 #https://github.com/minetest/minetest/blob/master/doc/world_format.txt
 
+import sys
 import struct
 import zlib
 import re
@@ -24,9 +25,10 @@ class MtBlockParser:
     arrayParam2 = None
 
     nodeMetadataRead = bytearray()
-    metadata_version = 1
+    metadata_version = 2    # 2 since map version 28
     metadata_count = None
     arrayMetadataRead = None
+    arrayMetadataReadPrivate = None
     arrayMetadataReadInventory = None
 
     static_object_version = 0
@@ -57,6 +59,7 @@ class MtBlockParser:
         self.arrayParam1 = {}
         self.arrayParam2 = {}
         self.arrayMetadataRead = {}
+        self.arrayMetadataReadPrivate = {}
         self.arrayMetadataReadInventory = {}
         self.nameIdMappings = {}
         self.arrayTimerTimeout = {}
@@ -157,8 +160,12 @@ class MtBlockParser:
         blockBlob.extend(struct.pack('B', self.flags))
         blockBlob.extend(struct.pack('B', self.content_width))
         blockBlob.extend(struct.pack('B', self.params_width))
-        blockBlob.extend(zlib.compress(self.nodeDataRead))
-        blockBlob.extend(zlib.compress(self.nodeMetadataRead))
+        if sys.version_info < (3, 0, 0):
+            blockBlob.extend(zlib.compress(buffer(self.nodeDataRead)))
+            blockBlob.extend(zlib.compress(buffer(self.nodeMetadataRead)))
+        else:
+            blockBlob.extend(zlib.compress(self.nodeDataRead))
+            blockBlob.extend(zlib.compress(self.nodeMetadataRead))
         blockBlob.extend(struct.pack('B', self.static_object_version))
         blockBlob.extend(self.objectsRead)
         blockBlob.extend(struct.pack('>I', self.timestamp))
@@ -200,39 +207,70 @@ class MtBlockParser:
             self.metadata_count = 0
             return
         cursor = 0
-        if self.metadata_version != struct.unpack('B', self.nodeMetadataRead[cursor:cursor + 1])[0]:
+        block_metadata_version = struct.unpack('B', self.nodeMetadataRead[cursor:cursor + 1])[0]
+        if block_metadata_version > 2 or block_metadata_version < 1:
             print("Unsuported metadata version! Trying anyway!")
         cursor+= 1
         self.metadata_count = struct.unpack('>H', self.nodeMetadataRead[cursor:cursor + 2])[0]
         cursor+= 2
-        for i in range(0, self.metadata_count):
-            position = struct.unpack('>H', self.nodeMetadataRead[cursor:cursor + 2])[0]
-            cursor+= 2
-            num_vars = struct.unpack('>i', self.nodeMetadataRead[cursor:cursor + 4])[0]
-            cursor+= 4
-            self.arrayMetadataRead[position] = {}
-            for j in range(0, num_vars):
-                key_len = struct.unpack('>H', self.nodeMetadataRead[cursor:cursor + 2])[0]
-                if key_len == 0:
-                    cursor+= 1  # some bad guy added 1 empty bit without mentioning it in map specification???
-                    print("Extra empty bit in metadata! skipping!")
-                    key_len = struct.unpack('>H', self.nodeMetadataRead[cursor:cursor + 2])[0]
-                    cursor+= 2  # well, no point to make any better workaround until specification is corrected
-                else:
-                    cursor+= 2
-                key = self.nodeMetadataRead[cursor:cursor + key_len]
-                cursor+= key_len
-                val_len = struct.unpack('>i', self.nodeMetadataRead[cursor:cursor + 4])[0]
+        if block_metadata_version == 1:
+            for i in range(0, self.metadata_count):
+                position = struct.unpack('>H', self.nodeMetadataRead[cursor:cursor + 2])[0]
+                cursor+= 2
+                num_vars = struct.unpack('>i', self.nodeMetadataRead[cursor:cursor + 4])[0]
                 cursor+= 4
-                self.arrayMetadataRead[position][key] = self.nodeMetadataRead[cursor:cursor + val_len]
-                cursor+= val_len
-            #just store inventory as text (bytearray!) for now
-            inventory_len = 0
-            inventory = self.nodeMetadataRead[cursor:].partition(b"EndInventory\n")
-            inventory = inventory[0] + inventory[1]
-            inventory_len = len(inventory)
-            self.arrayMetadataReadInventory[position] = inventory
-            cursor+= inventory_len
+                self.arrayMetadataRead[position] = {}
+                self.arrayMetadataReadPrivate[position] = {}
+                for j in range(0, num_vars):
+                    key_len = struct.unpack('>H', self.nodeMetadataRead[cursor:cursor + 2])[0]
+                    if key_len == 0:
+                        cursor+= 1  # some bad guy added 1 empty bit without mentioning it in map specification???
+                        print("Extra empty bit in metadata! skipping!")
+                        key_len = struct.unpack('>H', self.nodeMetadataRead[cursor:cursor + 2])[0]
+                        cursor+= 2  # well, no point to make any better workaround until specification is corrected
+                    else:
+                        cursor+= 2
+                    key = self.nodeMetadataRead[cursor:cursor + key_len]
+                    cursor+= key_len
+                    val_len = struct.unpack('>i', self.nodeMetadataRead[cursor:cursor + 4])[0]
+                    cursor+= 4
+                    self.arrayMetadataRead[position][key] = self.nodeMetadataRead[cursor:cursor + val_len]
+                    cursor+= val_len
+                    # In old version all metadata was public
+                    self.arrayMetadataReadPrivate[position][key] = 0
+                #just store inventory as text (bytearray!) for now
+                inventory_len = 0
+                inventory = self.nodeMetadataRead[cursor:].partition(b"EndInventory\n")
+                inventory = inventory[0] + inventory[1]
+                inventory_len = len(inventory)
+                self.arrayMetadataReadInventory[position] = inventory
+                cursor+= inventory_len
+        elif block_metadata_version >= 2:
+            for i in range(0, self.metadata_count):
+                position = struct.unpack('>H', self.nodeMetadataRead[cursor:cursor + 2])[0]
+                cursor+= 2
+                num_vars = struct.unpack('>i', self.nodeMetadataRead[cursor:cursor + 4])[0]
+                cursor+= 4
+                self.arrayMetadataRead[position] = {}
+                self.arrayMetadataReadPrivate[position] = {}
+                for j in range(0, num_vars):
+                    key_len = struct.unpack('>H', self.nodeMetadataRead[cursor:cursor + 2])[0]
+                    cursor+= 2
+                    key = self.nodeMetadataRead[cursor:cursor + key_len]
+                    cursor+= key_len
+                    val_len = struct.unpack('>i', self.nodeMetadataRead[cursor:cursor + 4])[0]
+                    cursor+= 4
+                    self.arrayMetadataRead[position][key] = self.nodeMetadataRead[cursor:cursor + val_len]
+                    cursor+= val_len
+                    self.arrayMetadataReadPrivate[position][key] = struct.unpack('B', self.nodeMetadataRead[cursor:cursor + 1])[0]
+                    cursor+= 1
+                #just store inventory as text (bytearray!) for now
+                inventory_len = 0
+                inventory = self.nodeMetadataRead[cursor:].partition(b"EndInventory\n")
+                inventory = inventory[0] + inventory[1]
+                inventory_len = len(inventory)
+                self.arrayMetadataReadInventory[position] = inventory
+                cursor+= inventory_len
         if length != cursor:
             print("Metadata length is wrong!")
 
@@ -241,6 +279,7 @@ class MtBlockParser:
         self.nodeMetadataRead.extend(struct.pack('>B', self.metadata_version))
         self.nodeMetadataRead.extend(struct.pack('>H', len(self.arrayMetadataRead)))
         for position, Metadata in self.arrayMetadataRead.items():
+            #print("nokey??? "+type(position))
             self.nodeMetadataRead.extend(struct.pack('>H', position))
             self.nodeMetadataRead.extend(struct.pack('>i', len(Metadata)))
             for key, val in Metadata.items():
@@ -248,6 +287,9 @@ class MtBlockParser:
                 self.nodeMetadataRead.extend(key)
                 self.nodeMetadataRead.extend(struct.pack('>i', len(val)))
                 self.nodeMetadataRead.extend(val)
+                # So, save in new metadata format?
+                self.nodeMetadataRead.append(self.arrayMetadataReadPrivate[position][key])
+                    
             self.nodeMetadataRead.extend(self.arrayMetadataReadInventory[position])
 
     def objectsParse(self):

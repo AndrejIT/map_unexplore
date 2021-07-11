@@ -64,10 +64,10 @@ for i in range(0, 4096):
     p = intAsRpos(i)
     m[i] = rposAsInt([p[0], p[1], 15-p[2]])
     
-facedir_nodelist = ['default:chest', 'default:chest_locked', 'default:bookshelf', 
-'door_wood_a', 'door_wood_b', 'door_steel_a', 'door_steel_b',  #doors are more complicated, TODO
-'default:furnace', 'default:furnace_active',
-'beds:fancy_bed_top', 'beds:fancy_bed_bottom', 'beds:bed_top', 'beds:bed_bottom']
+facedir_nodelist = [b'default:chest', b'default:chest_locked', b'default:bookshelf', 
+b'door_wood_a', b'door_wood_b', b'door_steel_a', b'door_steel_b',  #doors are more complicated, TODO
+b'default:furnace', b'default:furnace_active',
+b'beds:fancy_bed_top', b'beds:fancy_bed_bottom', b'beds:bed_top', b'beds:bed_bottom']
 
 for row in sourcecursor0.execute("SELECT `pos` FROM `blocks`"):
     pos=getIntegerAsBlock(row[0])
@@ -88,6 +88,7 @@ for row in sourcecursor0.execute("SELECT `pos` FROM `blocks`"):
                     tempB.nameIdMappings[tempA.arrayParam0[i]] = tempA.nameIdMappings[tempA.arrayParam0[i]]
                 if m[i] in tempA.arrayMetadataRead:
                     tempB.arrayMetadataRead[i] = tempA.arrayMetadataRead[m[i]]
+                    tempB.arrayMetadataReadPrivate[i] = tempA.arrayMetadataReadPrivate[m[i]]
                     tempB.arrayMetadataReadInventory[i] = tempA.arrayMetadataReadInventory[m[i]]
                 #rotate nodes wallmounted
                 if tempA.arrayParam2[m[i]] == 4:

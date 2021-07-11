@@ -51,11 +51,11 @@ for datarow in sourcecursor.execute("SELECT `data` FROM `blocks`"):
 #                        ownchest[temp.arrayMetadataRead[i]['owner']]+= 1
 #                    else:
 #                        ownchest[temp.arrayMetadataRead[i]['owner']] = 1
-            if tempName == 'protector:protect' or tempName == 'protector_mese:protect' or tempName == 'default:chest_locked':
-                if temp.arrayMetadataRead[i]['owner'] in ownsomething:
-                    ownsomething[temp.arrayMetadataRead[i]['owner']]+= 1
+            if tempName == b'protector:protect' or tempName == b'protector_mese:protect' or tempName == b'default:chest_locked':
+                if temp.arrayMetadataRead[i][b'owner'] in ownsomething:
+                    ownsomething[temp.arrayMetadataRead[i][b'owner']]+= 1
                 else:
-                    ownsomething[temp.arrayMetadataRead[i]['owner']] = 1
+                    ownsomething[temp.arrayMetadataRead[i][b'owner']] = 1
                     
 #s_ownprot = sorted(ownprot.items(), key=operator.itemgetter(1))
 #s_ownchest = sorted(ownchest.items(), key=operator.itemgetter(1))
