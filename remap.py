@@ -32,11 +32,11 @@ if(len(arguments) == 3 ):
 
 #use compiled regular expression to filter blocks by block content. it is faster that checking "in array".
 useful_block_evidence = re.compile(
-    "default:cobble|"+
-    "protector:protect|default:chest_locked|doors:door_steel|"+
-    "default:chest|default:torch|default:stonebrick|default:glass|default:obsidian_glass|"+
-    "default:ladder|default:rail|default:fence_wood|"+
-    "bones:bones"
+    b"default:cobble|"+
+    b"protector:protect|default:chest_locked|doors:door_steel|"+
+    b"default:chest|default:torch|default:stonebrick|default:glass|default:obsidian_glass|"+
+    b"default:ladder|default:rail|default:fence_wood|"+
+    b"bones:bones"
     )
 
 sourceconn = sqlite3.connect(source)

@@ -27,9 +27,9 @@ sourcecursor = sourceconn.cursor()
 ownchest = {}
 ownsomething = {}
 
-#owned_block_evidence = re.compile("protector:protect")
-#owned_block_evidence = re.compile("default:chest_locked")
-owned_block_evidence = re.compile("protector:protect|protector_mese:protect|default:chest_locked")
+#owned_block_evidence = re.compile(b"protector:protect")
+#owned_block_evidence = re.compile(b"default:chest_locked")
+owned_block_evidence = re.compile(b"protector:protect|protector_mese:protect|default:chest_locked")
 
 
 

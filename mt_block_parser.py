@@ -18,12 +18,12 @@ class MtBlockParser:
     content_width = 2
     params_width = 2
 
-    nodeDataRead = ''
+    nodeDataRead = bytearray()
     arrayParam0 = None
     arrayParam1 = None
     arrayParam2 = None
 
-    nodeMetadataRead = ''
+    nodeMetadataRead = bytearray()
     metadata_version = 1
     metadata_count = None
     arrayMetadataRead = None
@@ -31,23 +31,28 @@ class MtBlockParser:
 
     static_object_version = 0
     static_object_count = None
-    objectsRead = ''
+    objectsRead = bytearray()
     #TODO
 
     timestamp = None
 
     name_id_mapping_version = 0
     num_name_id_mappings = None
-    nameIdMappingsRead = ''
+    nameIdMappingsRead = bytearray()
     nameIdMappings = None
 
     length_of_timer = 10
     num_of_timers = None
-    timersRead = ''
+    timersRead = bytearray()
     arrayTimerTimeout = None
     arrayTimerElapsed = None
 
     def __init__(self, blockBlob):
+        self.nodeDataRead = bytearray()
+        self.nodeMetadataRead = bytearray()
+        self.objectsRead = bytearray()
+        self.nameIdMappingsRead = bytearray()
+    
         self.arrayParam0 = {}
         self.arrayParam1 = {}
         self.arrayParam2 = {}
@@ -92,15 +97,15 @@ class MtBlockParser:
                 print("Object version not supported!")
             cursor+=1
             self.static_object_count = struct.unpack('>H', blockBlob[cursor:cursor + 2])[0]
-            self.objectsRead+= blockBlob[cursor:cursor + 2]
+            self.objectsRead.extend(blockBlob[cursor:cursor + 2])
             cursor+= 2
             for i in range(0, self.static_object_count):
-                self.objectsRead+= blockBlob[cursor:cursor + 13]
+                self.objectsRead.extend(blockBlob[cursor:cursor + 13])
                 cursor+= 13
-                self.objectsRead+= blockBlob[cursor:cursor + 2]
+                self.objectsRead.extend(blockBlob[cursor:cursor + 2])
                 data_size = struct.unpack('>H', blockBlob[cursor:cursor + 2])[0]
                 cursor+= 2
-                self.objectsRead+= blockBlob[cursor:cursor + data_size]
+                self.objectsRead.extend(blockBlob[cursor:cursor + data_size])
                 cursor+= data_size
             self.timestamp = struct.unpack('>I', blockBlob[cursor:cursor + 4])[0]
             cursor+= 4
@@ -108,24 +113,24 @@ class MtBlockParser:
                 print("Name-ID mapping version not supported!")
             cursor+= 1
             self.num_name_id_mappings = struct.unpack('>H', blockBlob[cursor:cursor + 2])[0]
-            self.nameIdMappingsRead+= blockBlob[cursor:cursor + 2]
+            self.nameIdMappingsRead.extend(blockBlob[cursor:cursor + 2])
             cursor+= 2
             for i in range(0, self.num_name_id_mappings):
-                self.nameIdMappingsRead+= blockBlob[cursor:cursor + 2]
+                self.nameIdMappingsRead.extend(blockBlob[cursor:cursor + 2])
                 cursor+= 2
-                self.nameIdMappingsRead+= blockBlob[cursor:cursor + 2]
+                self.nameIdMappingsRead.extend(blockBlob[cursor:cursor + 2])
                 data_size = struct.unpack('>H', blockBlob[cursor:cursor + 2])[0]
                 cursor+= 2
-                self.nameIdMappingsRead+= blockBlob[cursor:cursor + data_size]
+                self.nameIdMappingsRead.extend(blockBlob[cursor:cursor + data_size])
                 cursor+= data_size
             if self.length_of_timer != struct.unpack('B', blockBlob[cursor:cursor + 1])[0]:
                 print("Length of timer not supported!")
             cursor+= 1
             self.num_of_timers = struct.unpack('>H', blockBlob[cursor:cursor + 2])[0]
-            self.timersRead+= blockBlob[cursor:cursor + 2]
+            self.timersRead.extend(blockBlob[cursor:cursor + 2])
             cursor+= 2
             for i in range(0, self.num_of_timers):
-                self.timersRead+= blockBlob[cursor:cursor + 10]
+                self.timersRead.extend(blockBlob[cursor:cursor + 10])
                 cursor+= 10
             if self.length != cursor:
                 print("Parsed length is wrong!")
@@ -147,24 +152,24 @@ class MtBlockParser:
 
 
     def selfCompile(self):
-        blockBlob = ''
-        blockBlob+= struct.pack('B', self.version)
-        blockBlob+= struct.pack('B', self.flags)
-        blockBlob+= struct.pack('B', self.content_width)
-        blockBlob+= struct.pack('B', self.params_width)
-        blockBlob+= zlib.compress(self.nodeDataRead)
-        blockBlob+= zlib.compress(self.nodeMetadataRead)
-        blockBlob+= struct.pack('B', self.static_object_version)
-        blockBlob+= self.objectsRead
-        blockBlob+= struct.pack('>I', self.timestamp)
-        blockBlob+= struct.pack('B', self.name_id_mapping_version)
-        blockBlob+= self.nameIdMappingsRead
-        blockBlob+= struct.pack('B', self.length_of_timer)
-        blockBlob+= self.timersRead
+        blockBlob = bytearray()
+        blockBlob.extend(struct.pack('B', self.version))
+        blockBlob.extend(struct.pack('B', self.flags))
+        blockBlob.extend(struct.pack('B', self.content_width))
+        blockBlob.extend(struct.pack('B', self.params_width))
+        blockBlob.extend(zlib.compress(self.nodeDataRead))
+        blockBlob.extend(zlib.compress(self.nodeMetadataRead))
+        blockBlob.extend(struct.pack('B', self.static_object_version))
+        blockBlob.extend(self.objectsRead)
+        blockBlob.extend(struct.pack('>I', self.timestamp))
+        blockBlob.extend(struct.pack('B', self.name_id_mapping_version))
+        blockBlob.extend(self.nameIdMappingsRead)
+        blockBlob.extend(struct.pack('B', self.length_of_timer))
+        blockBlob.extend(self.timersRead)
         return blockBlob
 
     def nodeDataParse(self):
-        if self.nodeDataRead == None or self.nodeDataRead == '':
+        if self.nodeDataRead == None or self.nodeDataRead == bytearray():
             print("No node data!")
             return
         if len(self.nodeDataRead) != 4096 * 4:
@@ -181,13 +186,13 @@ class MtBlockParser:
             cursor+= 1
 
     def nodeDataCompile(self):
-        self.nodeDataRead = ''
-        self.nodeDataRead+= struct.pack('>%sH' % 4096, *self.arrayParam0.values())
-        self.nodeDataRead+= struct.pack('B' * 4096, *self.arrayParam1.values())
-        self.nodeDataRead+= struct.pack('B' * 4096, *self.arrayParam2.values())
+        self.nodeDataRead = bytearray()
+        self.nodeDataRead.extend(struct.pack('>%sH' % 4096, *self.arrayParam0.values()))
+        self.nodeDataRead.extend(struct.pack('B' * 4096, *self.arrayParam1.values()))
+        self.nodeDataRead.extend(struct.pack('B' * 4096, *self.arrayParam2.values()))
 
     def nodeMetadataParse(self):
-        if self.nodeMetadataRead == None or self.nodeMetadataRead == '':
+        if self.nodeMetadataRead == None or self.nodeMetadataRead == bytearray():
             print("No node metadata!")
             return
         length = len(self.nodeMetadataRead)
@@ -232,18 +237,18 @@ class MtBlockParser:
             print("Metadata length is wrong!")
 
     def nodeMetadataCompile(self):
-        self.nodeMetadataRead = ''
-        self.nodeMetadataRead+= struct.pack('>B', self.metadata_version)
-        self.nodeMetadataRead+= struct.pack('>H', len(self.arrayMetadataRead))
+        self.nodeMetadataRead = bytearray()
+        self.nodeMetadataRead.extend(struct.pack('>B', self.metadata_version))
+        self.nodeMetadataRead.extend(struct.pack('>H', len(self.arrayMetadataRead)))
         for position, Metadata in self.arrayMetadataRead.items():
-            self.nodeMetadataRead+= struct.pack('>H', position)
-            self.nodeMetadataRead+= struct.pack('>i', len(Metadata))
+            self.nodeMetadataRead.extend(struct.pack('>H', position))
+            self.nodeMetadataRead.extend(struct.pack('>i', len(Metadata)))
             for key, val in Metadata.items():
-                self.nodeMetadataRead+= struct.pack('>H', len(key))
-                self.nodeMetadataRead+= str(key)
-                self.nodeMetadataRead+= struct.pack('>i', len(val))
-                self.nodeMetadataRead+= str(val)
-            self.nodeMetadataRead+= str(self.arrayMetadataReadInventory[position])
+                self.nodeMetadataRead.extend(struct.pack('>H', len(key)))
+                self.nodeMetadataRead.extend(str(key))
+                self.nodeMetadataRead.extend(struct.pack('>i', len(val)))
+                self.nodeMetadataRead.extend(str(val))
+            self.nodeMetadataRead.extend(str(self.arrayMetadataReadInventory[position]))
 
     def objectsParse(self):
         #TODO
@@ -266,12 +271,12 @@ class MtBlockParser:
 
     def nameIdMappingsCompile(self):
         self.num_name_id_mappings = len(self.nameIdMappings)
-        self.nameIdMappingsRead = ''
-        self.nameIdMappingsRead+= struct.pack('>H', self.num_name_id_mappings)
+        self.nameIdMappingsRead = bytearray()
+        self.nameIdMappingsRead.extend(struct.pack('>H', self.num_name_id_mappings))
         for mapping_id, mapping in self.nameIdMappings.items():
-            self.nameIdMappingsRead+= struct.pack('>H', mapping_id)
-            self.nameIdMappingsRead+= struct.pack('>H', len(mapping))
-            self.nameIdMappingsRead+= str(mapping)
+            self.nameIdMappingsRead.extend(struct.pack('>H', mapping_id))
+            self.nameIdMappingsRead.extend(struct.pack('>H', len(mapping)))
+            self.nameIdMappingsRead.extend(str(mapping))
 
     def timersParse(self):
         length = len(self.timersRead)
@@ -290,9 +295,9 @@ class MtBlockParser:
 
     def timersCompile(self):
         self.num_of_timers = len(self.arrayTimerTimeout)
-        self.timersRead = ''
-        self.timersRead+= struct.pack('>H', self.num_of_timers)
+        self.timersRead = bytearray()
+        self.timersRead.extend(struct.pack('>H', self.num_of_timers))
         for position, timeout in self.arrayTimerTimeout.items():
-            self.timersRead+= struct.pack('>H', position)
-            self.timersRead+= struct.pack('>i', timeout)
-            self.timersRead+= struct.pack('>i', self.arrayTimerElapsed[position])
+            self.timersRead.extend(struct.pack('>H', position))
+            self.timersRead.extend(struct.pack('>i', timeout))
+            self.timersRead.extend(struct.pack('>i', self.arrayTimerElapsed[position]))

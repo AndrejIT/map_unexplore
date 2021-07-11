@@ -34,11 +34,11 @@ if(len(arguments) == 3 ):
 
 #use compiled regular expression to filter blocks by block content. it is faster that checking "in array".
 useful_block_evidence = re.compile(
-#"default:cobble|"+"bones:bones|"+
-"protector:protect|default:chest_locked|doors:door_steel|"+
-"default:chest|default:torch|default:stonebrick|default:glass|default:obsidian_glass|"+
-"default:ladder|default:rail|default:fence_wood"
-)
+    #b"default:cobble|"+"bones:bones|"+
+    b"protector:protect|default:chest_locked|doors:door_steel|"+
+    b"default:chest|default:torch|default:stonebrick|default:glass|default:obsidian_glass|"+
+    b"default:ladder|default:rail|default:fence_wood"
+    )
 
 sourceconn = sqlite3.connect(source)
 sourcecursorXZ = sourceconn.cursor()
@@ -61,7 +61,7 @@ for rowMinMax in sourcecursorXZ.execute(" SELECT "+
     maxZ = rowMinMax[3]
     width = maxZ - minZ
     height = maxX - minX
-    
+
 
 image = Image.new("RGB", (width, height), (0,0,0,0))
 draw = ImageDraw.Draw(image)
@@ -93,7 +93,7 @@ for row in sourcecursor.execute(" SELECT "+
                 print "Do not fit to image:", row[0], row[1], row[2]
             else:
                 impixel[ row[0] - minX, height - row[2] + minZ ] = (255, 255, 200)
-    
+
 
 sourceconn.close()
 
