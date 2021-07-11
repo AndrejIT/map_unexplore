@@ -28,9 +28,9 @@ for row in sourcecursor0.execute("SELECT `pos` FROM `blocks`"):
         temp = mt_block_parser.MtBlockParser(datarow[0])
 
         temp.nameIdMappingsParse()
-        for key,value in temp.nameIdMappings.iteritems():
-            if value not in nodelist:
-                nodelist[value] = 0
+        for key,value in temp.nameIdMappings.items():
+            if value.decode() not in nodelist:
+                nodelist[value.decode()] = 0
 
         #Counting all nodes takes too long
         # temp.nodeDataParse()
@@ -45,6 +45,6 @@ with open(target, "w") as text_file:
     for n in s_nodelist:
         text_file.write(str(n) + "\n")
         #text_file.write(str(n[0]) + ' ' + str(n[1]) + "\n")
-        print n
+        print(n)
 
 sourceconn.close()

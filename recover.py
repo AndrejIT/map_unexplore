@@ -43,7 +43,7 @@ for row in sourcecursor.execute("SELECT `pos`, `data` "+" FROM `blocks`;"):
         if temp:
             targetcursor.execute("INSERT OR IGNORE INTO `blocks` VALUES (?, ?);", (row[0], row[1]))
     except:
-        print "Block parse error:", pos[0], pos[1], pos[2]
+        print("Block parse error:", pos[0], pos[1], pos[2])
             
 targetconn.commit()
 

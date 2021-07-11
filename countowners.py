@@ -18,7 +18,7 @@ if(len(arguments) > 1 ):
 if(len(arguments) > 2 ):
     target = str(arguments[2])
 
-print source
+print(source)
 
 sourceconn = sqlite3.connect(source)
 sourcecursor = sourceconn.cursor()
@@ -64,7 +64,7 @@ s_ownsomething = sorted(ownsomething.items(), key=operator.itemgetter(1))
 with open(target, "w") as text_file:
     for n in s_ownsomething:
         text_file.write(str(n[0]) + "\n")
-        print n
+        print(n)
 
 #datafile = file('auth.txt')
 #for line in datafile:

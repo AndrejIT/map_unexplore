@@ -86,11 +86,11 @@ for row in sourcecursor.execute(" SELECT "+
     try:
         block = mt_block_parser.MtBlockParser(row[4])
     except:
-        print "Block parse error:", row[0], row[1], row[2]
+        print("Block parse error:", row[0], row[1], row[2])
     else:
         if useful_block_evidence.search(block.nameIdMappingsRead)!=None:
             if row[0] - minX < 0 or width <= row[0] - minX or height - row[2] + minZ < 0 or height <= height - row[2] + minZ:
-                print "Do not fit to image:", row[0], row[1], row[2]
+                print("Do not fit to image:", row[0], row[1], row[2])
             else:
                 impixel[ row[0] - minX, height - row[2] + minZ ] = (255, 255, 200)
 

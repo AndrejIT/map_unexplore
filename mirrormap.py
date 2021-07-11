@@ -5,7 +5,6 @@
 
 import sys #to get parameters
 import sqlite3
-import cStringIO
 import time
 import mt_block_parser
 
@@ -113,7 +112,7 @@ for row in sourcecursor0.execute("SELECT `pos` FROM `blocks`"):
             targetcursor.execute("INSERT OR IGNORE INTO `blocks` VALUES (?, ?);", (getBlockAsInteger(posm), cleared_block))
             if pos[0] == 0 and pos[2] == 0:
                 targetconn.commit()
-                print row[0]    #at least something to see progress
+                print(row[0])    #at least something to see progress
 
 targetconn.commit()
 sourceconn.close()

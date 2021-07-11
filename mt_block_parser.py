@@ -226,9 +226,9 @@ class MtBlockParser:
                 cursor+= 4
                 self.arrayMetadataRead[position][key] = self.nodeMetadataRead[cursor:cursor + val_len]
                 cursor+= val_len
-            #just store inventory as text for now
+            #just store inventory as text (bytearray!) for now
             inventory_len = 0
-            inventory = str(self.nodeMetadataRead[cursor:]).partition("EndInventory\n")
+            inventory = self.nodeMetadataRead[cursor:].partition(b"EndInventory\n")
             inventory = inventory[0] + inventory[1]
             inventory_len = len(inventory)
             self.arrayMetadataReadInventory[position] = inventory
@@ -245,10 +245,10 @@ class MtBlockParser:
             self.nodeMetadataRead.extend(struct.pack('>i', len(Metadata)))
             for key, val in Metadata.items():
                 self.nodeMetadataRead.extend(struct.pack('>H', len(key)))
-                self.nodeMetadataRead.extend(str(key))
+                self.nodeMetadataRead.extend(key)
                 self.nodeMetadataRead.extend(struct.pack('>i', len(val)))
-                self.nodeMetadataRead.extend(str(val))
-            self.nodeMetadataRead.extend(str(self.arrayMetadataReadInventory[position]))
+                self.nodeMetadataRead.extend(val)
+            self.nodeMetadataRead.extend(self.arrayMetadataReadInventory[position])
 
     def objectsParse(self):
         #TODO
@@ -276,7 +276,7 @@ class MtBlockParser:
         for mapping_id, mapping in self.nameIdMappings.items():
             self.nameIdMappingsRead.extend(struct.pack('>H', mapping_id))
             self.nameIdMappingsRead.extend(struct.pack('>H', len(mapping)))
-            self.nameIdMappingsRead.extend(str(mapping))
+            self.nameIdMappingsRead.extend(mapping)
 
     def timersParse(self):
         length = len(self.timersRead)

@@ -47,7 +47,7 @@ targetcursor.execute("CREATE TABLE IF NOT EXISTS `blocks` (`pos` INT NOT NULL PR
 
 for row in sourcecursor.execute("SELECT `pos`, `data` "+" FROM `blocks`;"):
     pos=getIntegerAsBlock(row[0])
-    if pos[0]**2 + pos[2]**2 < (160/16)**2 and pos[1]>(-60/16):    #160 nodes radius and 60 nodes deep
+    if 0 and pos[0]**2 + pos[2]**2 < (160/16)**2 and pos[1]>(-60/16):    #160 nodes radius and 60 nodes deep
         targetcursor.execute("INSERT OR IGNORE INTO `blocks` VALUES (?, ?);", (row[0], row[1]))
     else:
         try:
@@ -55,7 +55,7 @@ for row in sourcecursor.execute("SELECT `pos`, `data` "+" FROM `blocks`;"):
             if useful_block_evidence.search(temp.nameIdMappingsRead)!=None:
                 targetcursor.execute("INSERT OR IGNORE INTO `blocks` VALUES (?, ?);", (row[0], row[1]))
         except:
-            print "Block parse error:", pos[0], pos[1], pos[2]
+            print("Block parse error:", pos[0], pos[1], pos[2])
             
 targetconn.commit()
 
